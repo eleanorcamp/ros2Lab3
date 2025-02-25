@@ -43,7 +43,7 @@ class Stopper(Node):
 
         # self.declare_parameter('stop_distance', .5)
         # self.stop_distance = self.get_parameter('stop_distance').value
-        self.stop_distance = 0.5
+        self.stop_distance = 1.25
 
         self.timer_period = 0.1  # seconds
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
@@ -54,18 +54,27 @@ class Stopper(Node):
         # Laser scan data is a list of range readings at different angles
         # We'll check the front-facing values of the laser scan data
         # front_value = msg.ranges[len(msg.ranges)//2]
-        front_values = msg.ranges[len(msg.ranges)//2-5: len(msg.ranges)//2+5]
+        front_values = msg.ranges[len(msg.ranges)//2-3: len(msg.ranges)//2+3]
+
+        filtered_values = []
+        for r in front_values:
+            if r != float('inf') and not r != r:
+                filtered_values.append(r)
 
         # If reading is below 0.5 meters (50 cm), stop the robot
-        if min(front_values) < self.stop_distance:
+        if min(filtered_values) < self.stop_distance:
             self.obstacle_detected = True
         else:
             self.obstacle_detected = False
         
-        self.get_logger().info(f"Minimum distance from obstacle: {min(front_values)} meters")
+        self.get_logger().info(f"Minimum distance from obstacle: {min(filtered_values)} meters")
+        
+
 
     def timer_callback(self):
         msg = Twist()
+
+        self.get_logger().info(f"Object detected: {self.obstacle_detected} ")
 
         if self.obstacle_detected:
             # If an obstacle is detected, stop the robot
