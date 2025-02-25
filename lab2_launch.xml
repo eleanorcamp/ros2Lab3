@@ -1,0 +1,11 @@
+<!-- 
+    Eleanor Camp
+    Feb 11, 2025
+    Lab 2 - launch file for stage world and stopper.py
+ -->
+<launch>
+    <node pkg="stage_ros2" exec="stage_ros2" name="stage" args="--ros-args -p world_file:='/home/eleanorcamp/lab2_workspace/src/stage_ros2/world/cave.world'"/>
+    <node pkg="lab2" exec="stopper" name="stopper_node">
+        <param name="stop_distance" value="0.5"/>
+    </node>
+</launch>
