@@ -14,8 +14,8 @@
 
 
 # Eleanor Camp
-# Feb 11, 2025
-# Lab 2 - making a robot stop .5m away from an object
+# Feb 25, 2025
+# Lab 3 - making a turtlebot4 stop .5m away from an object
 
 import rclpy
 from rclpy.node import Node
@@ -31,18 +31,19 @@ class Stopper(Node):
         super().__init__('stopper')
 
         # Publisher for the move data
-        self.publisher_ = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.publisher_ = self.create_publisher(Twist, '/cmd_vel_unstamped', 10)
 
         # Subscriber to the laser scan data
         self.laser_subscriber = self.create_subscription(
             LaserScan,
-            'base_scan',
+            '/scan',
             self.laser_callback,
             10
         )
 
-        self.declare_parameter('stop_distance', .5)
-        self.stop_distance = self.get_parameter('stop_distance').value
+        # self.declare_parameter('stop_distance', .5)
+        # self.stop_distance = self.get_parameter('stop_distance').value
+        self.stop_distance = 0.5
 
         self.timer_period = 0.1  # seconds
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
@@ -51,16 +52,17 @@ class Stopper(Node):
 
     def laser_callback(self, msg):
         # Laser scan data is a list of range readings at different angles
-        # We'll check the front-facing value of the laser scan data
-        front_value = msg.ranges[len(msg.ranges)//2]
+        # We'll check the front-facing values of the laser scan data
+        # front_value = msg.ranges[len(msg.ranges)//2]
+        front_values = msg.ranges[len(msg.ranges)//2-5: len(msg.ranges)//2+5]
 
         # If reading is below 0.5 meters (50 cm), stop the robot
-        if front_value < self.stop_distance:
+        if min(front_values) < self.stop_distance:
             self.obstacle_detected = True
         else:
             self.obstacle_detected = False
         
-        self.get_logger().info(f"Minimum distance from obstacle: {front_value} meters")
+        self.get_logger().info(f"Minimum distance from obstacle: {min(front_values)} meters")
 
     def timer_callback(self):
         msg = Twist()
