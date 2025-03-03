@@ -14,7 +14,7 @@
 
 
 # Eleanor Camp
-# Feb 25, 2025
+# Mar 3, 2025
 # Lab 3 - making a turtlebot4 stop .5m away from an object
 
 import rclpy
@@ -43,7 +43,7 @@ class Stopper(Node):
 
         # self.declare_parameter('stop_distance', .5)
         # self.stop_distance = self.get_parameter('stop_distance').value
-        self.stop_distance = 1.25
+        self.stop_distance = .75
 
         self.timer_period = 0.1  # seconds
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
@@ -53,22 +53,31 @@ class Stopper(Node):
     def laser_callback(self, msg):
         # Laser scan data is a list of range readings at different angles
         # We'll check the front-facing values of the laser scan data
-        # front_value = msg.ranges[len(msg.ranges)//2]
-        front_values = msg.ranges[len(msg.ranges)//2-3: len(msg.ranges)//2+3]
+        front_value = int(len(msg.ranges)/4)
+
+        front_values = msg.ranges[front_value-4 : front_value+4]
+
+        if not front_values:
+            return
 
         filtered_values = []
         for r in front_values:
-            if r != float('inf') and not r != r:
+            if r != float('inf'):# and not r != r:
                 filtered_values.append(r)
 
         # If reading is below 0.5 meters (50 cm), stop the robot
+        if not filtered_values:
+            return
+        
         if min(filtered_values) < self.stop_distance:
             self.obstacle_detected = True
         else:
             self.obstacle_detected = False
         
         self.get_logger().info(f"Minimum distance from obstacle: {min(filtered_values)} meters")
-        
+        # self.get_logger().info(f"FRONT POINT: {front_point}")
+        # self.get_logger().info(f"all points: {msg.ranges}")
+        # self.get_logger().info(f"Angle min: {msg.angle_min}  Angle max: {msg.angle_max}")
 
 
     def timer_callback(self):
@@ -81,7 +90,7 @@ class Stopper(Node):
             msg.linear.x = 0.0
         else:
             # Otherwise, drive forward at a constant speed
-            msg.linear.x = 0.25
+            msg.linear.x = 0.15
 
         self.publisher_.publish(msg)
 
